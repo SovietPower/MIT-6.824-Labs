@@ -8,12 +8,14 @@ package raft
 // test with the original before submitting.
 //
 
-import "testing"
-import "fmt"
-import "time"
-import "math/rand"
-import "sync/atomic"
-import "sync"
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"sync/atomic"
+	"testing"
+	"time"
+)
 
 // The tester generously allows solutions to complete elections in one second
 // (much more than the paper's range of timeouts).
@@ -369,6 +371,9 @@ func TestRejoin2B(t *testing.T) {
 }
 
 func TestBackup2B(t *testing.T) {
+	// My Code
+	count := 50 // default: 50
+
 	servers := 5
 	cfg := make_config(t, servers, false)
 	defer cfg.cleanup()
@@ -384,7 +389,8 @@ func TestBackup2B(t *testing.T) {
 	cfg.disconnect((leader1 + 4) % servers)
 
 	// submit lots of commands that won't commit
-	for i := 0; i < 50; i++ {
+	DPrintf("\tsubmit lots of commands that won't commit!\n")
+	for i := 0; i < count; i++ {
 		cfg.rafts[leader1].Start(rand.Int())
 	}
 
@@ -399,7 +405,8 @@ func TestBackup2B(t *testing.T) {
 	cfg.connect((leader1 + 4) % servers)
 
 	// lots of successful commands to new group.
-	for i := 0; i < 50; i++ {
+	DPrintf("\tlots of successful commands to new group!\n")
+	for i := 0; i < count; i++ {
 		cfg.one(rand.Int(), 3, true)
 	}
 
@@ -410,15 +417,18 @@ func TestBackup2B(t *testing.T) {
 		other = (leader2 + 1) % servers
 	}
 	cfg.disconnect(other)
+	DPrintf("\tnew leader: %v!\n", leader2)
 
 	// lots more commands that won't commit
-	for i := 0; i < 50; i++ {
+	DPrintf("\tlots more commands that won't commit!\n")
+	for i := 0; i < count; i++ {
 		cfg.rafts[leader2].Start(rand.Int())
 	}
 
 	time.Sleep(RaftElectionTimeout / 2)
 
-	// bring original leader back to life,
+	// bring original leader back to life
+	DPrintf("\tbring original leader back to life!\n")
 	for i := 0; i < servers; i++ {
 		cfg.disconnect(i)
 	}
@@ -427,11 +437,13 @@ func TestBackup2B(t *testing.T) {
 	cfg.connect(other)
 
 	// lots of successful commands to new group.
-	for i := 0; i < 50; i++ {
+	DPrintf("\tlots of successful commands to new group!\n")
+	for i := 0; i < count; i++ {
 		cfg.one(rand.Int(), 3, true)
 	}
 
 	// now everyone
+	DPrintf("\tnow everyone!\n")
 	for i := 0; i < servers; i++ {
 		cfg.connect(i)
 	}
